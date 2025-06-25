@@ -3,187 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Fall</title>
+    <title>Block Fall - Modern Edition</title>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9244949928133071"
      crossorigin="anonymous"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #2c3e50;
-            color: #ecf0f1;
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        h1 {
-            color: #ecf0f1;
-            text-shadow: 2px 2px 4px #1a2531;
-        }
-
-        #game-area {
-            display: flex;
-            gap: 20px;
-        }
-
-        #game-board {
-            position: relative;
-            border: 3px solid #34495e;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
-        }
-
-        canvas {
-            display: block;
-            background-color: #34495e;
-        }
-        
-        #side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 160px;
-        }
-
-        .info-box {
-            background-color: #34495e;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-        }
-        
-        .info-box h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.2em;
-            color: #95a5a6;
-            text-transform: uppercase;
-        }
-
-        #score, #level, #lines {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #ecf0f1;
-        }
-
-        #next-piece-canvas {
-            background-color: transparent;
-        }
-
-        #controls-box {
-            text-align: left;
-        }
-
-        #controls-box ul {
-            list-style: none;
             padding: 0;
-            margin: 0;
+            box-sizing: border-box;
         }
 
-        #controls-box li {
-            margin-bottom: 8px;
-            font-size: 1.1em;
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease-in-out infinite;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
         }
 
-        #game-overlay {
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        /* 背景粒子 */
+        .background-particles {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(44, 62, 80, 0.85);
-            color: white;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 游戏容器 */
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* 游戏标题 */
+        .game-title {
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Orbitron', monospace;
+            font-size: 3em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #00d4ff, #ff6b6b);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-flow 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            z-index: 10;
+        }
+
+        @keyframes gradient-flow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* 游戏面板 */
+        .game-board-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        #board-canvas {
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 侧边面板 */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 200px;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-box h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.1em;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 下一个方块预览 */
+        .next-piece-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+        }
+
+        #next-piece-canvas {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        /* 控制说明 */
+        .controls-box {
+            text-align: left;
+        }
+
+        .controls-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .controls-box li {
+            margin-bottom: 8px;
+            font-size: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .controls-box kbd {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85em;
+            color: #00ff88;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        /* 游戏覆盖层 */
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
+            z-index: 30;
             transition: opacity 0.3s ease;
-            opacity: 1;
-            pointer-events: all;
         }
 
-        #game-overlay.hidden {
+        .game-overlay.hidden {
             opacity: 0;
             pointer-events: none;
         }
 
-        #game-overlay h2 {
-            font-size: 2.5em;
-            margin: 0;
-            text-shadow: 2px 2px 5px #000;
+        .overlay-content {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        #start-button {
-            font-size: 1.5em;
-            cursor: pointer;
-            margin-top: 20px;
+
+        .overlay-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .start-button {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            font-weight: 600;
             padding: 15px 30px;
-            background-color: #e74c3c;
-            border-radius: 8px;
-            transition: background-color 0.2s;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #00ff88, #00d4ff);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
         }
 
-        #start-button:hover {
-            background-color: #c0392b;
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 255, 136, 0.4);
         }
 
+        /* 主页按钮 */
+        .home-button {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1em;
+            font-weight: 600;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            z-index: 10;
+        }
+
+        .home-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        /* 特效提示 */
+        .effect-display {
+            position: absolute;
+            top: 120px;
+            right: 30px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #feca57;
+            text-shadow: 0 0 15px rgba(254, 202, 87, 0.8);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.5s ease;
+            z-index: 10;
+            background: rgba(254, 202, 87, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(254, 202, 87, 0.3);
+            border-radius: 10px;
+            padding: 10px 15px;
+        }
+
+        .effect-display.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .game-container {
+                flex-direction: column;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .side-panel {
+                flex-direction: row;
+                width: auto;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .info-box {
+                min-width: 120px;
+            }
+            
+            .game-title {
+                font-size: 2.2em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 1.8em;
+                top: 15px;
+            }
+            
+            .home-button {
+                top: 15px;
+                right: 15px;
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+            
+            #board-canvas {
+                width: 300px !important;
+                height: 500px !important;
+            }
+            
+            .game-board-container {
+                padding: 15px;
+            }
+            
+            .side-panel {
+                gap: 15px;
+            }
+            
+            .info-box {
+                padding: 15px;
+            }
+            
+            .controls-box li {
+                font-size: 0.9em;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>🧱 Block Fall</h1>
-    <div id="game-area">
-        <div id="game-board">
+    <div class="background-particles">
+        <canvas id="particles-canvas"></canvas>
+    </div>
+
+    <div class="game-title">🧱 BLOCK FALL MODERN</div>
+    <button class="home-button" onclick="goHome()">BACK TO HOME</button>
+    
+    <div class="effect-display" id="effect-display"></div>
+
+    <div class="game-container">
+        <div class="game-board-container">
             <canvas id="board-canvas"></canvas>
-            <div id="game-overlay">
-                <h2 id="status-message">Ready?</h2>
-                <div id="start-button">Start Game</div>
+            <div class="game-overlay" id="game-overlay">
+                <div class="overlay-content">
+                    <div class="overlay-title" id="status-message">READY TO PLAY?</div>
+                    <button class="start-button" id="start-button">START GAME</button>
+                </div>
             </div>
         </div>
-        <div id="side-panel">
+
+        <div class="side-panel">
             <div class="info-box">
                 <h3>Score</h3>
-                <span id="score">0</span>
+                <div class="stat-value" id="score">0</div>
             </div>
             <div class="info-box">
                 <h3>Level</h3>
-                <span id="level">1</span>
+                <div class="stat-value" id="level">1</div>
             </div>
             <div class="info-box">
                 <h3>Lines</h3>
-                <span id="lines">0</span>
+                <div class="stat-value" id="lines">0</div>
             </div>
             <div class="info-box">
                 <h3>Next</h3>
-                <canvas id="next-piece-canvas"></canvas>
+                <div class="next-piece-container">
+                    <canvas id="next-piece-canvas"></canvas>
+                </div>
             </div>
-            <div class="info-box" id="controls-box">
+            <div class="info-box controls-box">
                 <h3>Controls</h3>
                 <ul>
-                    <li><strong>A:</strong> Move Left</li>
-                    <li><strong>D:</strong> Move Right</li>
-                    <li><strong>W:</strong> Rotate</li>
-                    <li><strong>S:</strong> Hard Drop</li>
-                    <li><strong>Shift:</strong> Soft Drop</li>
+                    <li><span>Move Left</span> <kbd>A</kbd></li>
+                    <li><span>Move Right</span> <kbd>D</kbd></li>
+                    <li><span>Rotate</span> <kbd>W</kbd></li>
+                    <li><span>Soft Drop</span> <kbd>S</kbd></li>
+                    <li><span>Hard Drop</span> <kbd>SPACE</kbd></li>
                 </ul>
             </div>
         </div>
     </div>
-    
+
     <script>
         // --- DOM Elements ---
         const boardCanvas = document.getElementById('board-canvas');
         const boardCtx = boardCanvas.getContext('2d');
         const nextCanvas = document.getElementById('next-piece-canvas');
         const nextCtx = nextCanvas.getContext('2d');
+        const particlesCanvas = document.getElementById('particles-canvas');
+        const particlesCtx = particlesCanvas.getContext('2d');
         const scoreSpan = document.getElementById('score');
         const levelSpan = document.getElementById('level');
         const linesSpan = document.getElementById('lines');
         const overlay = document.getElementById('game-overlay');
         const statusMessage = document.getElementById('status-message');
         const startButton = document.getElementById('start-button');
+        const effectDisplay = document.getElementById('effect-display');
 
         // --- Game Constants ---
         const COLS = 15;
@@ -195,14 +427,23 @@
         nextCanvas.width = 4 * BLOCK_SIZE;
         nextCanvas.height = 4 * BLOCK_SIZE;
 
+        // 设置粒子画布尺寸
+        function resizeCanvas() {
+            particlesCanvas.width = window.innerWidth;
+            particlesCanvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 现代化颜色方案
         const COLORS = {
-            I: '#3498db',
-            O: '#f1c40f',
-            T: '#9b59b6',
-            S: '#2ecc71',
-            Z: '#e74c3c',
-            J: '#1abc9c',
-            L: '#e67e22'
+            I: '#00d4ff',  // 青蓝色
+            O: '#feca57',  // 金黄色
+            T: '#ff6b6b',  // 珊瑚红
+            S: '#2ecc71',  // 翡翠绿
+            Z: '#e74c3c',  // 红色
+            J: '#9b59b6',  // 紫色
+            L: '#f39c12'   // 橙色
         };
 
         const POINTS = {
@@ -236,6 +477,111 @@
         let dropCounter = 0;
         let dropInterval = 1000;
         let pieceBag = [];
+        let particles = [];
+        let backgroundParticles = [];
+        let effectTimeout = null;
+
+        // 背景粒子类
+        class BackgroundParticle {
+            constructor() {
+                this.x = Math.random() * window.innerWidth;
+                this.y = Math.random() * window.innerHeight;
+                this.size = Math.random() * 3 + 1;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 0.5,
+                    y: Math.random() * 0.3 + 0.1
+                };
+                this.opacity = Math.random() * 0.3 + 0.1;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                if (this.y > window.innerHeight) {
+                    this.y = -10;
+                    this.x = Math.random() * window.innerWidth;
+                }
+                if (this.x > window.innerWidth) this.x = 0;
+                if (this.x < 0) this.x = window.innerWidth;
+            }
+
+            draw() {
+                particlesCtx.save();
+                particlesCtx.globalAlpha = this.opacity;
+                particlesCtx.fillStyle = '#ffffff';
+                particlesCtx.beginPath();
+                particlesCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                particlesCtx.fill();
+                particlesCtx.restore();
+            }
+        }
+
+        // 特效粒子类
+        class EffectParticle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8 - 2
+                };
+                this.color = color;
+                this.size = Math.random() * 4 + 2;
+                this.life = 1;
+                this.decay = 0.02;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.life -= this.decay;
+                this.velocity.x *= 0.98;
+                this.velocity.y *= 0.98;
+            }
+
+            draw() {
+                boardCtx.save();
+                boardCtx.globalAlpha = this.life;
+                boardCtx.fillStyle = this.color;
+                boardCtx.shadowColor = this.color;
+                boardCtx.shadowBlur = 10;
+                boardCtx.beginPath();
+                boardCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                boardCtx.fill();
+                boardCtx.restore();
+            }
+        }
+
+        // 初始化背景粒子
+        function initBackgroundParticles() {
+            backgroundParticles = [];
+            for (let i = 0; i < 80; i++) {
+                backgroundParticles.push(new BackgroundParticle());
+            }
+        }
+
+        // 创建爆炸效果
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new EffectParticle(
+                    x * BLOCK_SIZE + BLOCK_SIZE / 2,
+                    y * BLOCK_SIZE + BLOCK_SIZE / 2,
+                    color
+                ));
+            }
+        }
+
+        // 显示特效信息
+        function showEffect(message, duration = 2000) {
+            effectDisplay.textContent = message;
+            effectDisplay.classList.add('active');
+            
+            clearTimeout(effectTimeout);
+            effectTimeout = setTimeout(() => {
+                effectDisplay.classList.remove('active');
+            }, duration);
+        }
 
         // --- Piece Class ---
         class Piece {
@@ -256,17 +602,25 @@
                                 this.ctx,
                                 this.x + x,
                                 this.y + y,
-                                transparent ? lightenColor(this.color, 50) : this.color
+                                transparent ? this.getGhostColor() : this.color
                             );
                         }
                     });
                 });
             }
 
-            rotate() {
-                if (this.type === 'O') { return; } // O-pieces don't rotate
+            getGhostColor() {
+                // 返回半透明的颜色用于幽灵方块
+                const hex = this.color.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                return `rgba(${r}, ${g}, ${b}, 0.3)`;
+            }
 
-                // Create a new matrix for the rotated shape
+            rotate() {
+                if (this.type === 'O') { return; }
+
                 const transposed = this.shape.map((_, colIndex) => 
                     this.shape.map(row => row[colIndex])
                 );
@@ -276,25 +630,21 @@
                 this.shape = newShape;
 
                 if (!checkCollision()) {
-                    return; // Basic rotation is valid
+                    return;
                 }
 
-                // If collision, try a simple "wall kick"
                 const originalX = this.x;
                 
-                // Try moving 1 to the right
                 this.x++;
                 if (!checkCollision()) {
                     return;
                 }
                 
-                // Try moving 1 to the left
                 this.x = originalX - 1;
                 if (!checkCollision()) {
                     return;
                 }
 
-                // All kicks failed, revert
                 this.shape = originalShape;
                 this.x = originalX;
             }
@@ -308,11 +658,12 @@
             lines = 0;
             totalLinesCleared = 0;
             dropInterval = 1000;
+            particles = [];
             updateUI();
             
             fillBag();
             piece = new Piece(SHAPES[pieceBag.pop()], boardCtx);
-            ghostPiece = new Piece(piece.shape, boardCtx); // Create ghost
+            ghostPiece = new Piece(piece.shape, boardCtx);
             updateGhostPiece();
             fillBag();
             nextPiece = new Piece(SHAPES[pieceBag.pop()], nextCtx);
@@ -348,7 +699,6 @@
         
         function drawNextPiece() {
             nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-            nextCtx.fillStyle = nextPiece.color;
             nextPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if(value > 0) {
@@ -358,65 +708,47 @@
             });
         }
 
+        // 现代化方块绘制
         function drawBlock(ctx, x, y, color) {
             const pxX = x * BLOCK_SIZE;
             const pxY = y * BLOCK_SIZE;
 
-            // Main block color
+            // 主体颜色
             ctx.fillStyle = color;
-            ctx.fillRect(pxX, pxY, BLOCK_SIZE, BLOCK_SIZE);
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 8;
+            ctx.fillRect(pxX + 2, pxY + 2, BLOCK_SIZE - 4, BLOCK_SIZE - 4);
 
-            // Lighter shade for top and left edges
-            ctx.fillStyle = lightenColor(color, 25);
-            ctx.beginPath();
-            ctx.moveTo(pxX, pxY + BLOCK_SIZE);
-            ctx.lineTo(pxX, pxY);
-            ctx.lineTo(pxX + BLOCK_SIZE, pxY);
-            ctx.lineTo(pxX + BLOCK_SIZE - 2, pxY + 2);
-            ctx.lineTo(pxX + 2, pxY + 2);
-            ctx.lineTo(pxX + 2, pxY + BLOCK_SIZE - 2);
-            ctx.closePath();
-            ctx.fill();
+            // 内部高光
+            const innerColor = lightenColor(color, 30);
+            ctx.fillStyle = innerColor;
+            ctx.shadowBlur = 4;
+            ctx.fillRect(pxX + 4, pxY + 4, BLOCK_SIZE - 8, BLOCK_SIZE - 8);
 
-            // Darker shade for bottom and right edges
-            ctx.fillStyle = darkenColor(color, 25);
-            ctx.beginPath();
-            ctx.moveTo(pxX, pxY + BLOCK_SIZE);
-            ctx.lineTo(pxX + BLOCK_SIZE, pxY + BLOCK_SIZE);
-            ctx.lineTo(pxX + BLOCK_SIZE, pxY);
-            ctx.lineTo(pxX + BLOCK_SIZE - 2, pxY + 2);
-            ctx.lineTo(pxX + BLOCK_SIZE - 2, pxY + BLOCK_SIZE - 2);
-            ctx.lineTo(pxX + 2, pxY + BLOCK_SIZE - 2);
-            ctx.closePath();
-            ctx.fill();
+            // 边框
+            ctx.strokeStyle = lightenColor(color, 20);
+            ctx.lineWidth = 1;
+            ctx.shadowBlur = 0;
+            ctx.strokeRect(pxX + 1.5, pxY + 1.5, BLOCK_SIZE - 3, BLOCK_SIZE - 3);
         }
 
-        function lightenColor(hex, percent) {
-            hex = hex.replace('#', '');
+        function lightenColor(color, percent) {
+            if (color.startsWith('rgba')) {
+                return color;
+            }
+            const hex = color.replace('#', '');
             const r = parseInt(hex.substring(0, 2), 16);
             const g = parseInt(hex.substring(2, 4), 16);
             const b = parseInt(hex.substring(4, 6), 16);
             const p = percent / 100;
-            const newR = Math.min(255, r + Math.floor(r * p));
-            const newG = Math.min(255, g + Math.floor(g * p));
-            const newB = Math.min(255, b + Math.floor(b * p));
-            return `rgb(${newR},${newG},${newB})`;
-        }
-
-        function darkenColor(hex, percent) {
-            hex = hex.replace('#', '');
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
-            const p = percent / 100;
-            const newR = Math.max(0, r - Math.floor(r * p));
-            const newG = Math.max(0, g - Math.floor(g * p));
-            const newB = Math.max(0, b - Math.floor(b * p));
+            const newR = Math.min(255, r + Math.floor((255 - r) * p));
+            const newG = Math.min(255, g + Math.floor((255 - g) * p));
+            const newB = Math.min(255, b + Math.floor((255 - b) * p));
             return `rgb(${newR},${newG},${newB})`;
         }
 
         function updateUI() {
-            scoreSpan.textContent = score;
+            scoreSpan.textContent = score.toLocaleString();
             levelSpan.textContent = level;
             linesSpan.textContent = lines;
         }
@@ -445,7 +777,15 @@
 
         function draw() {
             drawBoard();
-            ghostPiece.draw(true); // Draw ghost piece first
+            
+            // 更新和绘制特效粒子
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw();
+                return particle.life > 0;
+            });
+
+            ghostPiece.draw(true);
             piece.draw();
             drawNextPiece();
         }
@@ -461,7 +801,7 @@
             ghostPiece.y--;
         }
 
-        function checkCollision(p = piece) { // Allow checking ghost piece
+        function checkCollision(p = piece) {
             return p.shape.some((row, y) => {
                 return row.some((value, x) => {
                     if (value > 0) {
@@ -487,9 +827,18 @@
             });
             
             let linesCleared = 0;
+            let clearedRows = [];
+            
             for (let y = board.length - 1; y >= 0; y--) {
                 if (board[y].every(value => value !== 0)) {
                     linesCleared++;
+                    clearedRows.push(y);
+                    
+                    // 为每个消除的方块创建爆炸效果
+                    for (let x = 0; x < COLS; x++) {
+                        createExplosion(x, y, board[y][x]);
+                    }
+                    
                     const removedRow = board.splice(y, 1)[0];
                     board.unshift(Array(COLS).fill(0));
                     y++;
@@ -498,13 +847,22 @@
             
             if (linesCleared > 0) {
                 const linePoints = [0, POINTS.SINGLE, POINTS.DOUBLE, POINTS.TRIPLE, POINTS.TETRIS];
-                score += linePoints[linesCleared] * level;
+                const points = linePoints[linesCleared] * level;
+                score += points;
                 lines += linesCleared;
                 totalLinesCleared += linesCleared;
+
+                // 显示特效信息
+                if (linesCleared === 4) {
+                    showEffect('TETRIS! +' + points.toLocaleString(), 3000);
+                } else if (linesCleared > 1) {
+                    showEffect(linesCleared + ' LINES! +' + points.toLocaleString(), 2000);
+                }
 
                 if (totalLinesCleared >= level * 10) {
                     level++;
                     dropInterval *= 0.9;
+                    showEffect('LEVEL UP! ' + level, 2000);
                 }
                 updateUI();
             }
@@ -513,7 +871,7 @@
             piece.ctx = boardCtx;
             piece.x = Math.floor(COLS / 2) - Math.floor(piece.shape[0].length / 2);
             piece.y = 0;
-            ghostPiece = new Piece(piece.shape, boardCtx); // Update ghost for new piece
+            ghostPiece = new Piece(piece.shape, boardCtx);
             updateGhostPiece();
             
             fillBag();
@@ -522,9 +880,31 @@
             if (checkCollision()) {
                 isGameOver = true;
                 overlay.classList.remove('hidden');
-                statusMessage.textContent = "Game Over";
-                startButton.textContent = "Play Again";
+                statusMessage.textContent = "GAME OVER";
+                startButton.textContent = "PLAY AGAIN";
             }
+        }
+
+        // 返回首页
+        function goHome() {
+            window.location.href = '../../index.html';
+        }
+
+        // 初始化
+        function init() {
+            initBackgroundParticles();
+            updateUI();
+            
+            // 背景粒子动画
+            function animateBackground() {
+                particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+                backgroundParticles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+                requestAnimationFrame(animateBackground);
+            }
+            animateBackground();
         }
 
         // --- Event Listeners ---
@@ -546,7 +926,7 @@
                 piece.x++;
                 if (checkCollision()) piece.x--;
                 moved = true;
-            } else if (e.key === 'Shift') {
+            } else if (e.key === 'Shift' || e.key.toLowerCase() === 's') {
                 piece.y++;
                 if (checkCollision()) {
                     piece.y--;
@@ -557,7 +937,8 @@
             } else if (e.key.toLowerCase() === 'w') {
                 piece.rotate();
                 moved = true;
-            } else if (e.key.toLowerCase() === 's') {
+            } else if (e.key === ' ') {
+                e.preventDefault();
                 piece.y = ghostPiece.y;
                 solidifyAndClearLines();
                 dropCounter = 0;
@@ -566,6 +947,11 @@
             if(moved) {
                 updateGhostPiece();
             }
+        });
+
+        // 启动游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
         });
     </script>
 </body>

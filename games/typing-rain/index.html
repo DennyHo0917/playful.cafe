@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Rain - Modern Word Game</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9244949928133071"
+     crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #1e3c72 50%, #0f1419 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* 动态背景粒子 */
+        .background-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 游戏容器 */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+        }
+
+        /* 顶部信息栏 */
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 10;
+        }
+
+        .game-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00f5ff, #0080ff, #00f5ff);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-flow 3s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+        }
+
+        @keyframes gradient-flow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 10px 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #00f5ff;
+        }
+
+        /* 游戏画布 */
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: transparent;
+            cursor: none;
+        }
+
+        /* 输入框 */
+        .input-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        #word-input {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8em;
+            font-weight: 600;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            width: 400px;
+        }
+
+        #word-input:focus {
+            border-color: #00f5ff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                        0 0 20px rgba(0, 245, 255, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        #word-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 游戏结束界面 */
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .game-over-content {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .game-over-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3em;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .final-stats {
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        .game-over-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .restart-btn, .home-btn {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            font-weight: 600;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #00f5ff, #0080ff);
+            box-shadow: 0 8px 25px rgba(0, 128, 255, 0.3);
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 128, 255, 0.4);
+        }
+
+        .home-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        /* 连击效果 */
+        .combo-display {
+            position: absolute;
+            top: 150px;
+            right: 40px;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #feca57;
+            text-shadow: 0 0 10px rgba(254, 202, 87, 0.6);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .combo-display.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* 游戏说明 */
+        .game-instructions {
+            position: absolute;
+            top: 150px;
+            left: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Rajdhani', sans-serif;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            max-width: 320px;
+        }
+
+        .instructions-content h3 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #00f5ff;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .instructions-content p {
+            font-size: 1.1em;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .instructions-content kbd {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            color: #00f5ff;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 1.8em;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .stat-item {
+                padding: 8px 15px;
+            }
+            
+            #word-input {
+                width: 300px;
+                font-size: 1.5em;
+            }
+            
+            .top-bar {
+                padding: 0 20px;
+            }
+
+            .game-instructions {
+                left: 20px;
+                max-width: 280px;
+                padding: 15px;
+            }
+
+            .instructions-content h3 {
+                font-size: 1.1em;
+            }
+
+            .instructions-content p {
+                font-size: 1em;
+            }
+
+            .combo-display {
+                right: 20px;
+                font-size: 1.2em;
+            }
+
+            .game-over-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .restart-btn, .home-btn {
+                min-width: 200px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            color: #00f5ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-particles">
+        <canvas id="particles-canvas"></canvas>
+    </div>
+
+    <div id="game-container">
+        <div class="top-bar">
+            <div class="game-title">TYPING RAIN</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">SCORE</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">LEVEL</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">WPM</div>
+                    <div class="stat-value" id="wpm">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">ACCURACY</div>
+                    <div class="stat-value" id="accuracy">100%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="combo-display" id="combo-display">
+            COMBO × <span id="combo-count">0</span>
+        </div>
+
+        <!-- 游戏说明 -->
+        <div class="game-instructions">
+            <div class="instructions-content">
+                <h3>How to Play</h3>
+                <p>• Type the falling words before they reach the bottom</p>
+                <p>• Press <kbd>Enter</kbd> or <kbd>Space</kbd> to submit your word</p>
+                <p>• Build combos by typing words consecutively</p>
+                <p>• Higher levels bring faster and more challenging words</p>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div class="input-container">
+            <input type="text" id="word-input" placeholder="Type the falling words..." autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="game-over-screen" id="game-over">
+            <div class="game-over-content">
+                <div class="game-over-title">GAME OVER</div>
+                <div class="final-stats">
+                    <p>Final Score: <span id="final-score">0</span></p>
+                    <p>Level Reached: <span id="final-level">1</span></p>
+                    <p>Max WPM: <span id="final-wpm">0</span></p>
+                    <p>Accuracy: <span id="final-accuracy">100%</span></p>
+                </div>
+                <div class="game-over-buttons">
+                    <button class="restart-btn" onclick="restartGame()">PLAY AGAIN</button>
+                    <button class="home-btn" onclick="goHome()">BACK TO HOME</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏变量
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const particlesCanvas = document.getElementById('particles-canvas');
+        const particlesCtx = particlesCanvas.getContext('2d');
+        const input = document.getElementById('word-input');
+
+        // 设置画布尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particlesCanvas.width = window.innerWidth;
+            particlesCanvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            level: 1,
+            lives: 3,
+            wordsTyped: 0,
+            totalChars: 0,
+            correctChars: 0,
+            startTime: Date.now(),
+            gameRunning: true,
+            combo: 0,
+            maxCombo: 0
+        };
+
+        // 单词数据库
+        const wordDatabase = {
+            easy: ['cat', 'dog', 'sun', 'moon', 'tree', 'fish', 'bird', 'star', 'love', 'hope', 'car', 'book', 'hand', 'eye', 'sea', 'sky', 'ice', 'fire', 'rock', 'wind'],
+            medium: ['computer', 'keyboard', 'rainbow', 'mountain', 'elephant', 'butterfly', 'adventure', 'creativity', 'orange', 'flower', 'window', 'summer', 'winter', 'spring'],
+            hard: ['programming', 'typography', 'photography', 'architecture', 'responsibility', 'extraordinary', 'magnificent', 'development', 'performance', 'experience']
+        };
+
+        // 掉落的单词数组
+        let fallingWords = [];
+        let particles = [];
+        let backgroundParticles = [];
+
+        // 粒子类
+        class Particle {
+            constructor(x, y, color, size = 2, velocity = null) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.size = size;
+                this.velocity = velocity || { x: (Math.random() - 0.5) * 4, y: (Math.random() - 0.5) * 4 };
+                this.life = 1;
+                this.decay = 0.02;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.life -= this.decay;
+                this.velocity.x *= 0.99;
+                this.velocity.y *= 0.99;
+            }
+
+            draw(context) {
+                context.save();
+                context.globalAlpha = this.life;
+                context.fillStyle = this.color;
+                context.beginPath();
+                context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                context.fill();
+                context.restore();
+            }
+        }
+
+        // 背景粒子类
+        class BackgroundParticle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 0.5,
+                    y: Math.random() * 0.5 + 0.1
+                };
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                if (this.y > canvas.height) {
+                    this.y = -10;
+                    this.x = Math.random() * canvas.width;
+                }
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+            }
+
+            draw() {
+                particlesCtx.save();
+                particlesCtx.globalAlpha = this.opacity;
+                particlesCtx.fillStyle = '#00f5ff';
+                particlesCtx.beginPath();
+                particlesCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                particlesCtx.fill();
+                particlesCtx.restore();
+            }
+        }
+
+        // 掉落单词类
+        class FallingWord {
+            constructor() {
+                this.word = this.getRandomWord();
+                this.x = Math.random() * (canvas.width - 200) + 100;
+                this.y = -50;
+                this.speed = Math.random() * 0.5 + 0.3 + (gameState.level - 1) * 0.1;
+                this.color = this.getWordColor();
+                this.fontSize = 24;
+                this.matched = false;
+                this.progress = 0;
+            }
+
+            getRandomWord() {
+                let difficulty;
+                if (gameState.level <= 2) {
+                    difficulty = 'easy';
+                } else if (gameState.level <= 5) {
+                    // 前期混合简单和中等难度
+                    difficulty = Math.random() < 0.7 ? 'easy' : 'medium';
+                } else if (gameState.level <= 8) {
+                    difficulty = Math.random() < 0.3 ? 'easy' : 'medium';
+                } else {
+                    // 高等级混合所有难度
+                    const rand = Math.random();
+                    if (rand < 0.2) difficulty = 'easy';
+                    else if (rand < 0.6) difficulty = 'medium';
+                    else difficulty = 'hard';
+                }
+
+                const words = wordDatabase[difficulty];
+                return words[Math.floor(Math.random() * words.length)];
+            }
+
+            getWordColor() {
+                const colors = ['#00f5ff', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+
+            draw() {
+                ctx.save();
+                
+                // 单词阴影效果
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                
+                ctx.font = `${this.fontSize}px 'Orbitron', monospace`;
+                ctx.textAlign = 'center';
+                
+                // 绘制已输入部分（绿色）
+                if (this.progress > 0) {
+                    ctx.fillStyle = '#00ff88';
+                    const partialWord = this.word.substring(0, this.progress);
+                    ctx.fillText(partialWord, this.x, this.y);
+                }
+                
+                // 绘制未输入部分
+                ctx.fillStyle = this.color;
+                const remainingWord = this.word.substring(this.progress);
+                const textWidth = ctx.measureText(this.word.substring(0, this.progress)).width;
+                ctx.fillText(remainingWord, this.x + textWidth, this.y);
+                
+                ctx.restore();
+            }
+
+            checkMatch(typedWord) {
+                const lowerTyped = typedWord.toLowerCase();
+                const lowerWord = this.word.toLowerCase();
+                
+                if (lowerWord.startsWith(lowerTyped)) {
+                    this.progress = typedWord.length;
+                    if (lowerTyped === lowerWord) {
+                        this.matched = true;
+                        return 'complete';
+                    }
+                    return 'partial';
+                }
+                return 'none';
+            }
+        }
+
+        // 初始化背景粒子
+        function initBackgroundParticles() {
+            backgroundParticles = [];
+            for (let i = 0; i < 50; i++) {
+                backgroundParticles.push(new BackgroundParticle());
+            }
+        }
+
+        // 生成新单词
+        function spawnWord() {
+            // 降低生成频率，最多同时3个单词
+            const maxWords = Math.min(3, 1 + Math.floor(gameState.level / 3));
+            const spawnRate = 0.008 + gameState.level * 0.002;
+            
+            if (fallingWords.length < maxWords && Math.random() < spawnRate) {
+                fallingWords.push(new FallingWord());
+            }
+        }
+
+        // 创建爆炸效果
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color, Math.random() * 3 + 1));
+            }
+        }
+
+        // 更新游戏统计
+        function updateStats() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('level').textContent = gameState.level;
+            
+            // 计算WPM
+            const timeElapsed = (Date.now() - gameState.startTime) / 60000; // 分钟
+            const wpm = gameState.wordsTyped > 0 ? Math.round(gameState.wordsTyped / timeElapsed) : 0;
+            document.getElementById('wpm').textContent = wpm;
+            
+            // 计算准确率
+            const accuracy = gameState.totalChars > 0 ? Math.round((gameState.correctChars / gameState.totalChars) * 100) : 100;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        // 更新连击显示
+        function updateComboDisplay() {
+            const comboDisplay = document.getElementById('combo-display');
+            const comboCount = document.getElementById('combo-count');
+            
+            if (gameState.combo > 1) {
+                comboCount.textContent = gameState.combo;
+                comboDisplay.classList.add('active');
+            } else {
+                comboDisplay.classList.remove('active');
+            }
+        }
+
+        // 处理输入 - 检查单词匹配
+        function checkWordMatch() {
+            const typedWord = input.value.trim().toLowerCase();
+            if (typedWord === '') return;
+
+            let wordMatched = false;
+            
+            for (let i = fallingWords.length - 1; i >= 0; i--) {
+                const word = fallingWords[i];
+                const matchResult = word.checkMatch(typedWord);
+                
+                if (matchResult === 'complete') {
+                    // 完整匹配
+                    wordMatched = true;
+                    const points = word.word.length * 10 * gameState.level;
+                    gameState.score += points + (gameState.combo * 5);
+                    gameState.wordsTyped++;
+                    gameState.combo++;
+                    gameState.correctChars += word.word.length;
+                    gameState.totalChars += word.word.length;
+                    
+                    // 创建爆炸效果
+                    createExplosion(word.x, word.y, '#00ff88');
+                    
+                    // 移除单词
+                    fallingWords.splice(i, 1);
+                    input.value = '';
+                    
+                    // 检查升级 - 前几级更容易升级
+                    const levelUpScore = gameState.level <= 3 ? gameState.level * 200 : gameState.level * 400;
+                    if (gameState.score > levelUpScore) {
+                        gameState.level++;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            if (!wordMatched && typedWord.length > 0) {
+                // 没有匹配的单词，重置连击
+                gameState.combo = 0;
+                // 清空输入框
+                input.value = '';
+            }
+            
+            updateComboDisplay();
+        }
+
+        // 处理实时输入 - 显示部分匹配
+        function handleInput() {
+            const typedWord = input.value.trim().toLowerCase();
+            
+            // 更新所有单词的显示状态
+            fallingWords.forEach(word => {
+                if (word.word.toLowerCase().startsWith(typedWord) && typedWord.length > 0) {
+                    word.progress = typedWord.length;
+                } else {
+                    word.progress = 0;
+                }
+            });
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameState.gameRunning) return;
+
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 更新和绘制背景粒子
+            backgroundParticles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+
+            // 生成新单词
+            spawnWord();
+
+            // 更新和绘制掉落单词
+            for (let i = fallingWords.length - 1; i >= 0; i--) {
+                const word = fallingWords[i];
+                word.update();
+                word.draw();
+
+                // 检查是否落到底部
+                if (word.y > canvas.height) {
+                    fallingWords.splice(i, 1);
+                    gameState.lives--;
+                    gameState.combo = 0; // 重置连击
+                    
+                    if (gameState.lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                }
+            }
+
+            // 更新和绘制粒子效果
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw(ctx);
+                return particle.life > 0;
+            });
+
+            // 更新统计信息
+            updateStats();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameState.gameRunning = false;
+            
+            // 显示最终统计
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-level').textContent = gameState.level;
+            document.getElementById('final-wpm').textContent = document.getElementById('wpm').textContent;
+            document.getElementById('final-accuracy').textContent = document.getElementById('accuracy').textContent;
+            
+            // 显示游戏结束界面
+            document.getElementById('game-over').style.display = 'flex';
+        }
+
+        // 重启游戏
+        function restartGame() {
+            gameState = {
+                score: 0,
+                level: 1,
+                lives: 3,
+                wordsTyped: 0,
+                totalChars: 0,
+                correctChars: 0,
+                startTime: Date.now(),
+                gameRunning: true,
+                combo: 0,
+                maxCombo: 0
+            };
+            
+            fallingWords = [];
+            particles = [];
+            input.value = '';
+            
+            document.getElementById('game-over').style.display = 'none';
+            updateStats();
+            updateComboDisplay();
+            gameLoop();
+        }
+
+        // 返回首页
+        function goHome() {
+            window.location.href = '../../index.html';
+        }
+
+        // 事件监听
+        input.addEventListener('input', handleInput);
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); // 防止空格添加到输入框
+                checkWordMatch();
+            }
+        });
+
+        // 初始化游戏
+        function initGame() {
+            initBackgroundParticles();
+            input.focus();
+            gameLoop();
+        }
+
+        // 启动游戏
+        initGame();
+    </script>
+</body>
+</html> 
