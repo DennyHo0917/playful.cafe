@@ -58,18 +58,10 @@ var squareBlock =
     ];
 var blocks = [straightBlock, lBlock, revLBlock, tBlock, zBlock, revZBlock, squareBlock];
 
-LoadDependencies();
-
 window.addEventListener('load', function () {
     Initialize();
     loaded = true;
 });
-
-function LoadDependencies() {
-    document.writeln("<script type='text/javascript' src='js/Renderer.js'></script>");
-    document.writeln("<script type='text/javascript' src='js/InputManager.js'></script>");
-    document.writeln("<script type='text/javascript' src='js/LocaleHandler.js'></script>");
-}
 
 function Initialize() {
     canvas = document.getElementById('gameCanvas');
