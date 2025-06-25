@@ -1,59 +1,589 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>贪吃蛇 Snake Game</title>
-  <style>
-    canvas { background: #000; display: block; margin: 0 auto; }
-    body { background: #222; color: #fff; text-align: center; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake - Reimagined</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        #game-wrapper {
+            display: none; /* Hidden by default, shown after mode selection */
+        }
+
+        #game-container {
+            position: relative;
+            width: 1000px;
+            height: 800px;
+            border: 2px solid #34495e;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        canvas {
+            background-color: #ecf0f1;
+            display: block;
+        }
+
+        #game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(44, 62, 80, 0.85);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+
+        #game-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #game-overlay h2 {
+            margin: 0 0 30px 0;
+            font-size: 3em;
+        }
+
+        .mode-button {
+            font-size: 1.5em;
+            cursor: pointer;
+            margin: 10px;
+            padding: 15px 30px;
+            background-color: #e74c3c;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .mode-button:hover {
+            background-color: #c0392b;
+        }
+        
+        #score-panel {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #power-up-status {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #d35400;
+            height: 25px; /* Reserve space to prevent layout shift */
+        }
+
+        #game-over-options {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+
+        #mode-description {
+            width: 1000px;
+            margin-top: 20px;
+            padding: 15px 25px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: left;
+            box-sizing: border-box;
+            display: flex;
+            gap: 20px;
+        }
+
+        .description-column {
+            flex: 1;
+        }
+
+        #mode-description h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #mode-description p {
+            font-size: 0.9em;
+            margin-top: 0;
+        }
+
+        #mode-description ul {
+            list-style: none;
+            padding-left: 0;
+            font-size: 0.9em;
+        }
+
+    </style>
 </head>
 <body>
-  <h1>🐍 贪吃蛇</h1>
-  <canvas id="game" width="400" height="400"></canvas>
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
-    const grid = 20;
-    let count = 0;
-    let snake = [{ x: 160, y: 160 }];
-    let dx = grid, dy = 0;
-    let apple = { x: 320, y: 320 };
 
-    function loop() {
-      requestAnimationFrame(loop);
-      if (++count < 4) return;
-      count = 0;
-      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-      snake.unshift(head);
+    <h1>🐍 Snake - Reimagined</h1>
 
-      if (head.x === apple.x && head.y === apple.y) {
-        apple.x = grid * Math.floor(Math.random() * 20);
-        apple.y = grid * Math.floor(Math.random() * 20);
-      } else {
-        snake.pop();
-      }
+    <div id="game-wrapper">
+        <div id="score-panel">
+            Score: <span id="score">0</span> | High Score: <span id="high-score">0</span>
+        </div>
+        <div id="power-up-status"></div>
+        <div id="game-container">
+            <canvas id="game" width="1000" height="800"></canvas>
+        </div>
+    </div>
+    
+    <!-- This overlay is now multi-purpose: mode selection and game over screen -->
+    <div id="game-overlay">
+        <h2 id="status-message">Choose Your Mode</h2>
+        <div id="mode-selection">
+            <div id="classic-button" class="mode-button">Classic Mode</div>
+            <div id="fun-button" class="mode-button">Fun Mode</div>
+        </div>
+        <div id="game-over-options" style="display: none;">
+            <div id="restart-button" class="mode-button">Play Again</div>
+            <div id="change-mode-button" class="mode-button">Change Mode</div>
+        </div>
+    </div>
 
-      if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) location.reload();
-      for (let i = 1; i < snake.length; i++) {
-        if (snake[i].x === head.x && snake[i].y === head.y) location.reload();
-      }
+    <div id="mode-description">
+        <div class="description-column">
+            <h3>Classic Mode</h3>
+            <p>The walls are deadly. Survive by eating food and using power-ups wisely. Normal apples disappear after a few seconds!</p>
+            <ul>
+                <li>🍎 <strong>Normal Apple:</strong> +1 Score, slight speed up.</li>
+                <li>✨ <strong>Golden Apple:</strong> +10 Score, temporary slow down. (Permanent)</li>
+                <li>💧 <strong>Blueberry:</strong> Shortens your snake. (Permanent)</li>
+                <li>☠️ <strong>Poison Apple:</strong> -5 Score, controls reversed. (Permanent)</li>
+            </ul>
+        </div>
+        <div class="description-column">
+            <h3>Fun Mode</h3>
+            <p>A fast-paced mode with no walls. The world wraps around, allowing you to travel through the edges. No power-ups, just pure speed and survival!</p>
+        </div>
+    </div>
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "lime";
-      snake.forEach(s => ctx.fillRect(s.x, s.y, grid-2, grid-2));
-      ctx.fillStyle = "red";
-      ctx.fillRect(apple.x, apple.y, grid-2, grid-2);
-    }
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const powerUpStatusElement = document.getElementById('power-up-status');
+        const overlay = document.getElementById('game-overlay');
+        const statusMessage = document.getElementById('status-message');
+        const classicButton = document.getElementById('classic-button');
+        const funButton = document.getElementById('fun-button');
+        const modeSelection = document.getElementById('mode-selection');
+        const restartButton = document.getElementById('restart-button');
+        const gameOverOptions = document.getElementById('game-over-options');
+        const changeModeButton = document.getElementById('change-mode-button');
+        const gameWrapper = document.getElementById('game-wrapper');
+        const highScoreElement = document.getElementById('high-score');
 
-    document.addEventListener("keydown", e => {
-      if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; }
-      if (e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -grid; }
-      if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; }
-      if (e.key === "ArrowDown" && dy === 0) { dx = 0; dy = grid; }
-    });
+        // --- Game State ---
+        const grid = 20;
+        let snake = [];
+        let dx = grid;
+        let dy = 0;
+        let foods = [];
+        let score = 0;
+        let isPaused = true;
+        let isGameOver = true;
+        let gameMode = ''; // 'classic' or 'fun'
+        let speed = 100;
+        let lastUpdateTime = 0;
+        let tail = null;
+        let highScore = localStorage.getItem('snakeHighScore') || 0;
+        let obstacles = [];
+        
+        // --- Power-up State (Classic Mode) ---
+        let areControlsReversed = false;
+        let reverseControlsTimeout;
+        let slowDownTimeout;
 
-    requestAnimationFrame(loop);
-  </script>
+        // --- Game Logic ---
+        function init() {
+            gameWrapper.style.display = 'none';
+            overlay.classList.remove('hidden');
+            statusMessage.textContent = 'Choose Your Mode';
+            modeSelection.style.display = 'block';
+            gameOverOptions.style.display = 'none';
+            updateHighScoreDisplay();
+        }
+
+        function startGame(mode) {
+            gameMode = mode;
+            snake = [];
+            obstacles = []; // Clear previous obstacles
+            foods = []; // Clear previous food
+            
+            const startX = Math.floor(canvas.width / grid / 2) * grid;
+            const startY = Math.floor(canvas.height / grid / 2) * grid;
+            // Initial length of 5 for both modes
+            for (let i = 0; i < 5; i++) {
+                snake.push({ x: startX - i * grid, y: startY });
+            }
+
+            dx = grid;
+            dy = 0;
+            score = 0;
+            if (gameMode === 'fun') {
+                speed = 50; // 2x faster for Fun Mode
+            } else {
+                speed = 100; // Normal speed for Classic
+            }
+            tail = null;
+            isPaused = false;
+            isGameOver = false;
+
+            clearTimeout(reverseControlsTimeout);
+            clearTimeout(slowDownTimeout);
+            areControlsReversed = false;
+            powerUpStatusElement.textContent = '';
+            
+            spawnObstacles();
+            // Initial food spawn is now handled by the main loop
+            updateScore();
+            
+            gameWrapper.style.display = 'block';
+            overlay.classList.add('hidden');
+            lastUpdateTime = performance.now();
+            requestAnimationFrame(loop);
+        }
+
+        function spawnObstacles() {
+            const obstacleCount = 15;
+            const safeZoneSize = 10; // 10x10 grid square in the center is safe
+            const canvasCenter = { x: Math.floor(canvas.width / grid / 2), y: Math.floor(canvas.height / grid / 2) };
+            const safeMin = { x: canvasCenter.x - safeZoneSize / 2, y: canvasCenter.y - safeZoneSize / 2 };
+            const safeMax = { x: canvasCenter.x + safeZoneSize / 2, y: canvasCenter.y + safeZoneSize / 2 };
+
+            for (let i = 0; i < obstacleCount; i++) {
+                let pos;
+                let isValidPosition;
+                do {
+                    isValidPosition = true;
+                    pos = {
+                        x: grid * Math.floor(Math.random() * (canvas.width / grid)),
+                        y: grid * Math.floor(Math.random() * (canvas.height / grid))
+                    };
+                    
+                    // Check if in safe zone
+                    const gridX = pos.x / grid;
+                    const gridY = pos.y / grid;
+                    if (gridX > safeMin.x && gridX < safeMax.x && gridY > safeMin.y && gridY < safeMax.y) {
+                        isValidPosition = false;
+                        continue;
+                    }
+
+                    // Check if overlapping with other obstacles
+                    if (obstacles.some(o => o.x === pos.x && o.y === pos.y)) {
+                        isValidPosition = false;
+                    }
+
+                } while (!isValidPosition);
+                obstacles.push(pos);
+            }
+        }
+
+        function spawnFood() {
+            let type = 'normal';
+            if (gameMode === 'classic') {
+                const rand = Math.random();
+                if (rand < 0.05) type = 'golden';    // 5% chance
+                else if (rand < 0.10) type = 'poison'; // 5% chance, reduced from 10%
+                else if (rand < 0.20) type = 'blueberry'; // 10% chance
+            }
+
+            let foodPosition;
+            let isValidPosition;
+            do {
+                isValidPosition = true;
+                foodPosition = {
+                    x: grid * Math.floor(Math.random() * (canvas.width / grid)),
+                    y: grid * Math.floor(Math.random() * (canvas.height / grid))
+                };
+                
+                if (obstacles.some(o => o.x === foodPosition.x && o.y === foodPosition.y) ||
+                    snake.some(s => s.x === foodPosition.x && s.y === foodPosition.y) ||
+                    foods.some(f => f.x === foodPosition.x && f.y === foodPosition.y)) {
+                    isValidPosition = false;
+                }
+
+            } while(!isValidPosition);
+            
+            const newFood = {
+                ...foodPosition,
+                type: type,
+                id: Date.now() + Math.random(),
+                createdAt: performance.now()
+            };
+
+            // Only normal food has a limited lifetime
+            if (type === 'normal') {
+                newFood.lifetime = (5 + Math.random() * 5) * 1000; // 5-10 seconds lifetime
+            }
+
+            return newFood;
+        }
+        
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        function updateHighScoreDisplay() {
+            highScoreElement.textContent = highScore;
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            isPaused = true;
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('snakeHighScore', highScore);
+                updateHighScoreDisplay();
+                statusMessage.textContent = 'New High Score!';
+            } else {
+                statusMessage.textContent = 'Game Over';
+            }
+
+            modeSelection.style.display = 'none';
+            gameOverOptions.style.display = 'flex';
+            overlay.classList.remove('hidden');
+        }
+
+        function loop(currentTime) {
+            if (isPaused) return;
+            requestAnimationFrame(loop);
+            
+            const elapsed = currentTime - lastUpdateTime;
+            if (elapsed > speed) {
+                lastUpdateTime = currentTime - (elapsed % speed);
+                
+                // --- Food Management ---
+                // Power-ups (no lifetime property) persist, normal food expires
+                foods = foods.filter(f => !f.lifetime || (currentTime - f.createdAt) < f.lifetime);
+                
+                // Guarantee at least one food, and maintain up to 3 total
+                const maxFoodCount = 3;
+                while(foods.length < maxFoodCount) {
+                    foods.push(spawnFood());
+                }
+                
+                let head = { ...snake[0] }; // Copy head
+                head.x += dx;
+                head.y += dy;
+
+                // --- Collision Logic ---
+                if (gameMode === 'fun') { // Wrap-around for Fun Mode
+                    if (head.x < 0) head.x = canvas.width - grid;
+                    if (head.x >= canvas.width) head.x = 0;
+                    if (head.y < 0) head.y = canvas.height - grid;
+                    if (head.y >= canvas.height) head.y = 0;
+                } else { // Wall collision for Classic Mode
+                    if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                        return gameOver();
+                    }
+                }
+                
+                // Obstacle collision (both modes)
+                if (obstacles.some(o => o.x === head.x && o.y === head.y)) {
+                    return gameOver();
+                }
+                
+                snake.unshift(head);
+                
+                // Self collision (applies to both modes)
+                for (let i = 1; i < snake.length; i++) {
+                    if (head.x === snake[i].x && head.y === snake[i].y) {
+                        return gameOver();
+                    }
+                }
+                
+                // --- Food Logic ---
+                const eatenFoodIndex = foods.findIndex(f => f.x === head.x && f.y === head.y);
+
+                if (eatenFoodIndex > -1) {
+                    const eatenFood = foods.splice(eatenFoodIndex, 1)[0];
+                    score++;
+                    if (gameMode === 'classic') {
+                        handlePowerUp(eatenFood.type);
+                    } else {
+                        speed = Math.max(25, speed - 1); // Fun mode has a higher top speed
+                    }
+                    updateScore();
+                    tail = null;
+                } else {
+                    tail = snake.pop();
+                }
+            }
+            draw(currentTime);
+        }
+
+        function handlePowerUp(type) {
+            clearTimeout(reverseControlsTimeout);
+            clearTimeout(slowDownTimeout);
+            areControlsReversed = false;
+            speed = 100; // Reset speed from any previous power-up
+            powerUpStatusElement.textContent = '';
+            
+            switch (type) {
+                case 'golden':
+                    score += 9; // +1 from eating, +9 extra
+                    powerUpStatusElement.textContent = 'SLOW DOWN!';
+                    speed = 150; // Slower
+                    slowDownTimeout = setTimeout(() => {
+                        speed = 100;
+                        powerUpStatusElement.textContent = '';
+                    }, 5000);
+                    break;
+                case 'poison':
+                    score = Math.max(0, score - 5);
+                    powerUpStatusElement.textContent = 'CONTROLS REVERSED!';
+                    areControlsReversed = true;
+                    reverseControlsTimeout = setTimeout(() => {
+                        areControlsReversed = false;
+                        powerUpStatusElement.textContent = '';
+                    }, 5000);
+                    break;
+                case 'blueberry':
+                    if (snake.length > 2) {
+                       tail = snake.pop();
+                    }
+                    powerUpStatusElement.textContent = 'SHORTER!';
+                    setTimeout(() => powerUpStatusElement.textContent = '', 2000);
+                    break;
+                case 'normal':
+                default:
+                    speed = Math.max(40, speed - 1); // Normal speed increase
+                    break;
+            }
+        }
+        
+        // --- Drawing ---
+        function drawSegment(pos, isHead) {
+            const centerX = pos.x + grid / 2;
+            const centerY = pos.y + grid / 2;
+            const radius = grid / 2 - 1;
+
+            ctx.fillStyle = isHead ? '#2ecc71' : '#27ae60';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            if (isHead) {
+                const eyeRadius = grid / 5;
+                const eyeOffsetX = (dy === 0) ? 0 : grid / 3.5;
+                const eyeOffsetY = (dx === 0) ? 0 : grid / 3.5;
+
+                // White part of the eye
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(centerX - eyeOffsetX, centerY - eyeOffsetY, eyeRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX + eyeOffsetX, centerY + eyeOffsetY, eyeRadius, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Pupil (looks in the direction of movement)
+                const pupilRadius = eyeRadius / 2;
+                const pupilOffsetX = (dx / grid) * (radius / 2.5);
+                const pupilOffsetY = (dy / grid) * (radius / 2.5);
+
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(centerX - eyeOffsetX + pupilOffsetX, centerY - eyeOffsetY + pupilOffsetY, pupilRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX + eyeOffsetX + pupilOffsetX, centerY + eyeOffsetY + pupilOffsetY, pupilRadius, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        function draw(currentTime) {
+            const progress = isGameOver ? 1 : Math.min(1, (currentTime - lastUpdateTime) / speed);
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Obstacles
+            ctx.fillStyle = '#5D6D7E';
+            obstacles.forEach(o => {
+                ctx.fillRect(o.x, o.y, grid, grid);
+            });
+
+            // Draw Foods
+            const foodRadius = grid / 2.5;
+            foods.forEach(food => {
+                switch (food.type) {
+                    case 'golden': ctx.fillStyle = '#f1c40f'; break;
+                    case 'poison': ctx.fillStyle = '#8e44ad'; break;
+                    case 'blueberry': ctx.fillStyle = '#3498db'; break;
+                    default: ctx.fillStyle = '#e74c3c'; break;
+                }
+                ctx.beginPath();
+                ctx.arc(food.x + grid / 2, food.y + grid / 2, foodRadius, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Draw Snake (interpolation logic from previous step)
+            for (let i = 0; i < snake.length; i++) {
+                const p1 = snake[i];
+                let p0;
+                if (i === 0) {
+                    p0 = { x: p1.x - dx, y: p1.y - dy };
+                } else {
+                    const sourceSegment = (i === snake.length - 1) ? tail : snake[i + 1];
+                    p0 = sourceSegment || snake[i - 1];
+                }
+                drawSegment({ x: p0.x + (p1.x - p0.x) * progress, y: p0.y + (p1.y - p0.y) * progress }, i === 0);
+            }
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('keydown', e => {
+            if (isPaused) return;
+
+            let key = e.key;
+            let currentDx = areControlsReversed ? -dx : dx;
+            let currentDy = areControlsReversed ? -dy : dy;
+
+            const goingUp = currentDy === -grid;
+            const goingDown = currentDy === grid;
+            const goingRight = currentDx === grid;
+            const goingLeft = currentDx === -grid;
+
+            if (key === 'a' && !goingRight) { dx = -grid; dy = 0; }
+            if (key === 'w' && !goingDown) { dx = 0; dy = -grid; }
+            if (key === 'd' && !goingLeft) { dx = grid; dy = 0; }
+            if (key === 's' && !goingUp) { dx = 0; dy = grid; }
+        });
+        
+        classicButton.addEventListener('click', () => startGame('classic'));
+        funButton.addEventListener('click', () => startGame('fun'));
+        restartButton.addEventListener('click', () => startGame(gameMode)); // Restart in the same mode
+        changeModeButton.addEventListener('click', init);
+
+        // --- Initial Call ---
+        init();
+    </script>
 </body>
 </html>
+

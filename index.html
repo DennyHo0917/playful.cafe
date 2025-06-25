@@ -1,16 +1,41 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>童年小游戏站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Game Hub</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>👾 欢迎来到童年小游戏站</h1>
-  <p>点击下面的游戏开始玩吧：</p>
-  <ul>
-    <li><a href="games/snake/index.html">🐍 贪吃蛇 Snake Game</a></li>
-    <li><a href="games/BlockFall/src/index.html">🧱 Block Fall</a></li>
-  </ul>
+
+  <header class="header">
+    <h1>👾 Retro Game Hub</h1>
+  </header>
+
+  <main class="main-content">
+    <p>Click on a game card below to start playing!</p>
+    <div class="game-grid">
+      <a href="games/snake/index.html" class="game-card">
+        <div class="icon">🐍</div>
+        <div class="game-card-content">
+          <h2>Snake</h2>
+          <p>A classic throwback. Control the snake to eat food and grow longer.</p>
+        </div>
+      </a>
+      <a href="games/BlockFall/index.html" class="game-card">
+        <div class="icon">🧱</div>
+        <div class="game-card-content">
+          <h2>Block Fall</h2>
+          <p>Move and rotate falling blocks to complete and clear lines.</p>
+        </div>
+      </a>
+      <!-- More games can be added here -->
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2024 Retro Game Hub. All Rights Reserved.</p>
+  </footer>
+
 </body>
 </html>
