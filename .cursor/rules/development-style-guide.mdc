@@ -9,11 +9,16 @@ This document outlines the key principles to follow when working on this project
 
 ## Language
 
-- **All content must be in English.** This includes:
+### Project Content
+- **All project content must be in English.** This includes:
   - All user-facing text and UI elements.
   - Code comments and documentation.
   - Commit messages.
-  - All communication.
+  - Variable names and function names.
+
+### Personal Communication
+- **Personal communication between developers can be in Chinese** for better understanding and efficiency.
+- **Project deliverables and documentation must remain in English** for consistency and accessibility.
 
 ## Coding Principles
 
