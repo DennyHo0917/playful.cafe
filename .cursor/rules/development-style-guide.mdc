@@ -1,0 +1,30 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Development Style Guide
+
+This document outlines the key principles to follow when working on this project. Adhering to these guidelines ensures consistency and quality.
+
+## Language
+
+- **All content must be in English.** This includes:
+  - All user-facing text and UI elements.
+  - Code comments and documentation.
+  - Commit messages.
+  - All communication.
+
+## Coding Principles
+
+- **Minimize Modifications:** Make only the changes necessary to complete the requested task. Do not refactor or restyle code unless it is part of the core request.
+- **DRY (Don't Repeat Yourself):** Avoid code duplication. If you find yourself writing the same code in multiple places, abstract it into a reusable function or component.
+
+## Project Structure
+
+The project contains several simple browser-based games. The main entry point for the website is [index.html](mdc:index.html). Each game is located in its own directory under `/games/`.
+
+- [BlockFall](mdc:games/BlockFall/index.html)
+- [snake](mdc:games/snake/index.html)
+- [story](mdc:games/story/index.html)
+- [typing-rain](mdc:games/typing-rain/index.html)

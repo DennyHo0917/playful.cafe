@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake - Modern Edition</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SMTNW9G4V5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-SMTNW9G4V5');
+    </script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9244949928133071"
      crossorigin="anonymous"></script>
-    <style>
+  <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
         
         * {
@@ -453,7 +462,7 @@
                 align-items: center;
             }
         }
-    </style>
+  </style>
 </head>
 <body>
     <div class="background-particles">
@@ -532,7 +541,7 @@
         </div>
     </div>
 
-    <script>
+  <script>
         // 游戏变量
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
@@ -822,14 +831,14 @@
                     return;
                 }
 
-                snake.unshift(head);
+      snake.unshift(head);
 
                 // 检查吃到食物
                 const eatenFoodIndex = food.findIndex(f => f.x === head.x && f.y === head.y);
                 if (eatenFoodIndex > -1) {
                     const eatenFood = food.splice(eatenFoodIndex, 1)[0];
                     handleFoodEffect(eatenFood.type, eatenFood.x, eatenFood.y);
-                } else {
+      } else {
                     snake.pop(); // 没吃到食物就移除尾巴
                 }
 
@@ -1023,7 +1032,7 @@
         // 返回首页
         function goHome() {
             window.location.href = '../../index.html';
-        }
+    }
 
         // 键盘控制
         document.addEventListener('keydown', (e) => {
@@ -1062,7 +1071,7 @@
 
         // 启动游戏
         document.addEventListener('DOMContentLoaded', init);
-    </script>
+  </script>
 </body>
 </html>
 
